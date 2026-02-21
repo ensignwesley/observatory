@@ -18,7 +18,7 @@ import math
 import sqlite3
 import time
 from datetime import datetime, timezone
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 DB_PATH = Path.home() / 'observatory/observatory.db'
@@ -574,6 +574,11 @@ def render_csv(conn) -> str:
 # ── HTTP handler ───────────────────────────────────────────────────────────────
 
 class Handler(BaseHTTPRequestHandler):
+    # Socket read timeout: if handle_one_request() blocks waiting for data on
+    # a keep-alive connection nginx has already closed, this unblocks it after
+    # 10 seconds rather than hanging forever.
+    timeout = 10
+
     def address_string(self):
         # Skip reverse DNS lookup — avoids 5s delay on each request
         return self.client_address[0]
@@ -582,11 +587,22 @@ class Handler(BaseHTTPRequestHandler):
         # Suppress default access log — too noisy for a monitoring dashboard
         pass
 
+    def handle_one_request(self):
+        # Catch BrokenPipeError here (before socketserver logs it) and mark
+        # the connection closed so handle() doesn't loop back for another read.
+        try:
+            super().handle_one_request()
+        except (BrokenPipeError, ConnectionResetError):
+            self.close_connection = True
+
     def send(self, code: int, ctype: str, body: str):
         enc = body.encode('utf-8')
         self.send_response(code)
         self.send_header('Content-Type', ctype)
         self.send_header('Content-Length', str(len(enc)))
+        # Tell nginx not to reuse this connection — prevents handle() from
+        # looping back and blocking on readline() after the pipe closes.
+        self.send_header('Connection', 'close')
         self.send_header('X-Frame-Options', 'SAMEORIGIN')
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.end_headers()
@@ -619,6 +635,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header('Content-Disposition',
                                  f'attachment; filename="observatory-{int(time.time())}.csv"')
                 self.send_header('Content-Length', str(len(enc)))
+                self.send_header('Connection', 'close')
                 self.end_headers()
                 self.wfile.write(enc)
         finally:
@@ -628,7 +645,10 @@ class Handler(BaseHTTPRequestHandler):
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 def main():
-    server = HTTPServer(('127.0.0.1', PORT), Handler)
+    # ThreadingHTTPServer: each request handled in its own thread.
+    # Without this, a single hung connection (e.g. keep-alive timeout) blocks
+    # the entire server from accepting new requests.
+    server = ThreadingHTTPServer(('127.0.0.1', PORT), Handler)
     print(f'[observatory] Listening on http://127.0.0.1:{PORT}')
     print(f'[observatory] Dashboard: http://127.0.0.1:{PORT}/observatory')
     try:
