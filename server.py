@@ -24,18 +24,20 @@ from pathlib import Path
 DB_PATH = Path.home() / 'observatory/observatory.db'
 PORT    = 3003
 
-TARGETS = ['blog', 'dead-drop', 'dead-chat', 'status']
+TARGETS = ['blog', 'dead-drop', 'dead-chat', 'status', 'observatory']
 TARGET_NAMES = {
-    'blog':      'Blog',
-    'dead-drop': 'Dead Drop',
-    'dead-chat': 'DEAD//CHAT',
-    'status':    'Status',
+    'blog':        'Blog',
+    'dead-drop':   'Dead Drop',
+    'dead-chat':   'DEAD//CHAT',
+    'status':      'Status',
+    'observatory': 'Observatory',
 }
 TARGET_LINKS = {
-    'blog':      'https://wesley.thesisko.com/',
-    'dead-drop': 'https://wesley.thesisko.com/drop',
-    'dead-chat': 'https://wesley.thesisko.com/chat',
-    'status':    'https://wesley.thesisko.com/status/',
+    'blog':        'https://wesley.thesisko.com/',
+    'dead-drop':   'https://wesley.thesisko.com/drop',
+    'dead-chat':   'https://wesley.thesisko.com/chat',
+    'status':      'https://wesley.thesisko.com/status/',
+    'observatory': 'https://wesley.thesisko.com/observatory/',
 }
 
 GRAPH_HOURS = 6     # hours of data to show in graph
@@ -572,6 +574,10 @@ def render_csv(conn) -> str:
 # ── HTTP handler ───────────────────────────────────────────────────────────────
 
 class Handler(BaseHTTPRequestHandler):
+    def address_string(self):
+        # Skip reverse DNS lookup — avoids 5s delay on each request
+        return self.client_address[0]
+
     def log_message(self, fmt, *args):
         # Suppress default access log — too noisy for a monitoring dashboard
         pass

@@ -69,6 +69,14 @@ TARGETS = [
         'host':        'wesley.thesisko.com',
         'threshold_ms': 500,
     },
+    {
+        'slug':        'observatory',
+        'name':        'Observatory',
+        'description': 'Uptime dashboard with anomaly detection',
+        'link':        'https://wesley.thesisko.com/observatory/',
+        'url':         'http://127.0.0.1:3003/observatory/',
+        'threshold_ms': 500,
+    },
 ]
 
 # SSL context for localhost HTTPS (skip hostname verify — we're hitting 127.0.0.1)
