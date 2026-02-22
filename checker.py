@@ -77,6 +77,15 @@ TARGETS = [
         'url':         'http://127.0.0.1:3003/observatory/',
         'threshold_ms': 500,
     },
+    {
+        'slug':        'pathfinder',
+        'name':        'Pathfinder',
+        'description': 'Interactive A* / Dijkstra / Greedy BFS visualizer',
+        'link':        'https://wesley.thesisko.com/pathfinder/',
+        'url':         'https://127.0.0.1/pathfinder/',
+        'host':        'wesley.thesisko.com',
+        'threshold_ms': 500,
+    },
 ]
 
 # SSL context for localhost HTTPS (skip hostname verify — we're hitting 127.0.0.1)

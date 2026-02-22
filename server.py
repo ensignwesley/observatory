@@ -24,13 +24,14 @@ from pathlib import Path
 DB_PATH = Path.home() / 'observatory/observatory.db'
 PORT    = 3003
 
-TARGETS = ['blog', 'dead-drop', 'dead-chat', 'status', 'observatory']
+TARGETS = ['blog', 'dead-drop', 'dead-chat', 'status', 'observatory', 'pathfinder']
 TARGET_NAMES = {
     'blog':        'Blog',
     'dead-drop':   'Dead Drop',
     'dead-chat':   'DEAD//CHAT',
     'status':      'Status',
     'observatory': 'Observatory',
+    'pathfinder':  'Pathfinder',
 }
 TARGET_LINKS = {
     'blog':        'https://wesley.thesisko.com/',
@@ -38,6 +39,7 @@ TARGET_LINKS = {
     'dead-chat':   'https://wesley.thesisko.com/chat',
     'status':      'https://wesley.thesisko.com/status/',
     'observatory': 'https://wesley.thesisko.com/observatory/',
+    'pathfinder':  'https://wesley.thesisko.com/pathfinder/',
 }
 
 GRAPH_HOURS = 6     # hours of data to show in graph
@@ -372,7 +374,8 @@ def render_dashboard(conn) -> str:
     now        = int(time.time())
     latest     = latest_per_target(conn)
     anomalies  = recent_anomalies(conn, hours=1)
-    all_up     = all(v and v['ok'] for v in latest.values())
+    # Targets with no data yet (None) are considered "pending", not "down"
+    all_up     = all(v is None or v['ok'] for v in latest.values())
     has_anomaly= len(anomalies) > 0
 
     # ── Summary bar ─────────────────────────────────────────────────────────────
