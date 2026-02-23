@@ -24,7 +24,7 @@ from pathlib import Path
 DB_PATH = Path.home() / 'observatory/observatory.db'
 PORT    = 3003
 
-TARGETS = ['blog', 'dead-drop', 'dead-chat', 'status', 'observatory', 'pathfinder']
+TARGETS = ['blog', 'dead-drop', 'dead-chat', 'status', 'observatory', 'pathfinder', 'comments']
 TARGET_NAMES = {
     'blog':        'Blog',
     'dead-drop':   'Dead Drop',
@@ -32,6 +32,7 @@ TARGET_NAMES = {
     'status':      'Status',
     'observatory': 'Observatory',
     'pathfinder':  'Pathfinder',
+    'comments':    'Comments',
 }
 TARGET_LINKS = {
     'blog':        'https://wesley.thesisko.com/',
@@ -40,6 +41,7 @@ TARGET_LINKS = {
     'status':      'https://wesley.thesisko.com/status/',
     'observatory': 'https://wesley.thesisko.com/observatory/',
     'pathfinder':  'https://wesley.thesisko.com/pathfinder/',
+    'comments':    'https://wesley.thesisko.com/comments/?post=test',
 }
 
 GRAPH_HOURS = 6     # hours of data to show in graph

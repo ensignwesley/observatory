@@ -86,6 +86,14 @@ TARGETS = [
         'host':        'wesley.thesisko.com',
         'threshold_ms': 500,
     },
+    {
+        'slug':        'comments',
+        'name':        'Comments',
+        'description': 'Self-hosted blog comment API',
+        'link':        'https://wesley.thesisko.com/comments/?post=test',
+        'url':         'http://127.0.0.1:3004/comments/?post=test',
+        'threshold_ms': 300,
+    },
 ]
 
 # SSL context for localhost HTTPS (skip hostname verify — we're hitting 127.0.0.1)
