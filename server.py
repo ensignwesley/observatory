@@ -153,7 +153,7 @@ def make_svg(rows):
 
     lines = [
         f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">',
-        f'<rect width="{W}" height="{H}" fill="#0d1520"/>',
+        f'<rect class="graph-bg" width="{W}" height="{H}" fill="#0d1520"/>',
     ]
 
     # ── Y-axis grid + labels ────────────────────────────────────────────────────
@@ -161,7 +161,7 @@ def make_svg(rows):
         ms_val = ms_max * (100 - pct) / 100
         y      = PAD_T + GH * pct / 100
         lines.append(
-            f'<line x1="{PAD_L}" y1="{y:.1f}" x2="{W-PAD_R}" y2="{y:.1f}" '
+            f'<line class="grid-line" x1="{PAD_L}" y1="{y:.1f}" x2="{W-PAD_R}" y2="{y:.1f}" '
             f'stroke="#1a2a3a" stroke-width="1"/>'
         )
         lines.append(
@@ -176,7 +176,7 @@ def make_svg(rows):
         x     = _tx(tick_ts, ts_min, ts_max)
         label = datetime.fromtimestamp(tick_ts, tz=timezone.utc).strftime('%H:%M')
         lines.append(
-            f'<line x1="{x:.1f}" y1="{PAD_T}" x2="{x:.1f}" y2="{PAD_T+GH}" '
+            f'<line class="grid-line" x1="{x:.1f}" y1="{PAD_T}" x2="{x:.1f}" y2="{PAD_T+GH}" '
             f'stroke="#1a2a3a" stroke-width="1" stroke-dasharray="3,5"/>'
         )
         lines.append(
@@ -187,11 +187,11 @@ def make_svg(rows):
 
     # ── Axes ────────────────────────────────────────────────────────────────────
     lines.append(
-        f'<line x1="{PAD_L}" y1="{PAD_T}" x2="{PAD_L}" y2="{PAD_T+GH}" '
+        f'<line class="axis-line" x1="{PAD_L}" y1="{PAD_T}" x2="{PAD_L}" y2="{PAD_T+GH}" '
         f'stroke="#2dd4bf" stroke-width="1" opacity="0.3"/>'
     )
     lines.append(
-        f'<line x1="{PAD_L}" y1="{PAD_T+GH}" x2="{W-PAD_R}" y2="{PAD_T+GH}" '
+        f'<line class="axis-line" x1="{PAD_L}" y1="{PAD_T+GH}" x2="{W-PAD_R}" y2="{PAD_T+GH}" '
         f'stroke="#2dd4bf" stroke-width="1" opacity="0.3"/>'
     )
 
@@ -206,7 +206,7 @@ def make_svg(rows):
             for ts, ms in ok_pts
         )
         lines.append(
-            f'<polyline points="{pts}" fill="none" stroke="#2dd4bf" '
+            f'<polyline class="latency-line" points="{pts}" fill="none" stroke="#2dd4bf" '
             f'stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>'
         )
 
@@ -217,11 +217,11 @@ def make_svg(rows):
             y  = PAD_T + GH - 6
             d  = 4
             lines.append(
-                f'<line x1="{x-d:.1f}" y1="{y-d:.1f}" x2="{x+d:.1f}" y2="{y+d:.1f}" '
+                f'<line class="down-marker" x1="{x-d:.1f}" y1="{y-d:.1f}" x2="{x+d:.1f}" y2="{y+d:.1f}" '
                 f'stroke="#f87171" stroke-width="2"/>'
             )
             lines.append(
-                f'<line x1="{x+d:.1f}" y1="{y-d:.1f}" x2="{x-d:.1f}" y2="{y+d:.1f}" '
+                f'<line class="down-marker" x1="{x+d:.1f}" y1="{y-d:.1f}" x2="{x-d:.1f}" y2="{y+d:.1f}" '
                 f'stroke="#f87171" stroke-width="2"/>'
             )
 
@@ -230,7 +230,7 @@ def make_svg(rows):
         if r['ok'] and r['response_ms'] is not None and not r['anomaly']:
             x = _tx(r['ts'], ts_min, ts_max)
             y = _ty(r['response_ms'], ms_max)
-            lines.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="2" fill="#2dd4bf"/>')
+            lines.append(f'<circle class="dot-ok" cx="{x:.1f}" cy="{y:.1f}" r="2" fill="#2dd4bf"/>')
 
     # ── Anomaly dots (red, larger) ──────────────────────────────────────────────
     for r in rows:
@@ -238,7 +238,7 @@ def make_svg(rows):
             x = _tx(r['ts'], ts_min, ts_max)
             y = _ty(r['response_ms'], ms_max)
             lines.append(
-                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="5" fill="#f87171" '
+                f'<circle class="dot-anomaly" cx="{x:.1f}" cy="{y:.1f}" r="5" fill="#f87171" '
                 f'stroke="#7f1d1d" stroke-width="1" opacity="0.9"/>'
             )
 
@@ -356,6 +356,357 @@ footer { border-top:1px solid var(--border); padding:1.5rem 0;
          text-align:center; font-size:.8rem; color:var(--muted); margin-top:2rem; }
 .footer-links { margin-top:.4rem; display:flex; justify-content:center; gap:1.5rem; }
 """
+
+
+LCARS_CSS = """
+/* ═══════════════════════════════════════════════════════════════════════
+   LCARS THEME  —  Library Computer Access/Retrieval System
+   Inspired by Star Trek TNG (1987–1994) LCARS interface design.
+   Applied via  html.theme-lcars  selector; toggle persists to localStorage.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Palette ─────────────────────────────────────────────────────────── */
+html.theme-lcars {
+  --lc-bg:     #000000;
+  --lc-orange: #FF7700;
+  --lc-tan:    #FFAA77;
+  --lc-gold:   #FFCC00;
+  --lc-purple: #9966BB;
+  --lc-lav:    #CC99CC;
+  --lc-blue:   #7799CC;
+  --lc-cyan:   #66AACC;
+  --lc-red:    #CC4444;
+  --lc-green:  #44AA44;
+  --lc-text:   #EEEEFF;
+  --lc-dim:    #886644;
+  --lc-data:   #080808;
+  --lc-bar:    #111111;
+}
+
+/* ── Global ──────────────────────────────────────────────────────────── */
+html.theme-lcars body {
+  background: var(--lc-bg);
+  color: var(--lc-text);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.06em;
+}
+html.theme-lcars a            { color: var(--lc-orange); }
+html.theme-lcars a:hover      { color: var(--lc-tan); text-decoration: none; }
+
+/* ── Header — LCARS top-band + elbow chrome ──────────────────────────── */
+html.theme-lcars header {
+  background: var(--lc-bg);
+  border-bottom: none;
+  padding: 0;
+}
+
+/* Multi-colour top stripe */
+html.theme-lcars header::before {
+  content: '';
+  display: block;
+  height: 10px;
+  background: linear-gradient(to right,
+    var(--lc-orange) 0% 55%,
+    var(--lc-purple) 55% 78%,
+    var(--lc-blue)   78% 100%);
+}
+
+/* Inner row: LCARS label block + title + nav */
+html.theme-lcars .header-inner {
+  display: flex;
+  align-items: stretch;
+  min-height: 52px;
+  padding: 0;
+  gap: 0;
+}
+
+/* Left elbow block */
+html.theme-lcars .header-inner::before {
+  content: 'LCARS';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  background: var(--lc-orange);
+  color: var(--lc-bg);
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  margin-right: 1.25rem;
+  /* Concave elbow corner: clip the bottom-right as a quarter-circle */
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%);
+}
+
+html.theme-lcars .header-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--lc-orange);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  align-self: center;
+  padding: 0;
+}
+
+html.theme-lcars .header-sub {
+  color: var(--lc-dim);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  align-self: center;
+}
+
+html.theme-lcars .header-nav {
+  margin-left: auto;
+  align-self: center;
+  padding-right: 1rem;
+  gap: 1.25rem;
+}
+html.theme-lcars .header-nav a {
+  color: var(--lc-tan);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+html.theme-lcars .header-nav a:hover { color: var(--lc-orange); }
+
+/* Multi-colour bottom stripe under header */
+html.theme-lcars header::after {
+  content: '';
+  display: block;
+  height: 6px;
+  background: linear-gradient(to right,
+    var(--lc-orange) 0% 35%,
+    var(--lc-lav)    35% 60%,
+    var(--lc-blue)   60% 75%,
+    var(--lc-cyan)   75% 90%,
+    var(--lc-gold)   90% 100%);
+  margin-top: 4px;
+}
+
+/* ── Theme toggle button ─────────────────────────────────────────────── */
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--teal);
+  color: var(--teal);
+  padding: 0.22rem 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 3px;
+  font-family: var(--mono);
+  transition: 0.15s;
+  white-space: nowrap;
+}
+.theme-toggle:hover { background: var(--teal); color: var(--bg); }
+
+html.theme-lcars .theme-toggle {
+  background: var(--lc-orange);
+  border: none;
+  color: var(--lc-bg);
+  border-radius: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  font-size: 0.62rem;
+  padding: 0.25rem 0.75rem;
+}
+html.theme-lcars .theme-toggle:hover {
+  background: var(--lc-tan);
+  color: var(--lc-bg);
+}
+
+/* ── Summary bar ─────────────────────────────────────────────────────── */
+html.theme-lcars .summary-bar {
+  background: var(--lc-data);
+  border: none;
+  border-left: 10px solid var(--lc-orange);
+  border-radius: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  margin: 1.25rem 0 1rem;
+}
+html.theme-lcars .summary-bar.all-up  {
+  border-left-color: var(--lc-green);
+  background: #001400;
+}
+html.theme-lcars .summary-bar.degraded {
+  border-left-color: var(--lc-red);
+  background: #140000;
+}
+
+/* LCARS status indicators: square, not circular */
+html.theme-lcars .status-dot {
+  border-radius: 0;
+  width: 14px;
+  height: 14px;
+}
+html.theme-lcars .dot-up   { background: var(--lc-green); box-shadow: 0 0 8px var(--lc-green); }
+html.theme-lcars .dot-down { background: var(--lc-red);   box-shadow: 0 0 8px var(--lc-red); }
+html.theme-lcars .dot-warn { background: var(--lc-gold);  box-shadow: 0 0 8px var(--lc-gold); }
+html.theme-lcars .summary-ts { color: var(--lc-dim); }
+
+/* ── Anomaly panel ───────────────────────────────────────────────────── */
+html.theme-lcars .anomaly-panel {
+  background: #140000;
+  border: none;
+  border-left: 10px solid var(--lc-red);
+  border-radius: 0;
+}
+html.theme-lcars .anomaly-panel h3 { color: var(--lc-red); letter-spacing: 0.2em; }
+html.theme-lcars .anomaly-target   { color: var(--lc-red); }
+html.theme-lcars .anomaly-z        { color: var(--lc-dim); }
+
+/* ── Cards → LCARS data panels ──────────────────────────────────────── */
+html.theme-lcars .grid { gap: 0.75rem; }
+
+html.theme-lcars .card {
+  background: var(--lc-data);
+  border: none;
+  border-radius: 0;
+  border-left: 14px solid var(--lc-orange);
+}
+
+/* Rotate through canonical LCARS service colours */
+html.theme-lcars .card:nth-child(7n+1) { border-left-color: var(--lc-orange); }
+html.theme-lcars .card:nth-child(7n+2) { border-left-color: var(--lc-purple); }
+html.theme-lcars .card:nth-child(7n+3) { border-left-color: var(--lc-blue);   }
+html.theme-lcars .card:nth-child(7n+4) { border-left-color: var(--lc-tan);    }
+html.theme-lcars .card:nth-child(7n+5) { border-left-color: var(--lc-cyan);   }
+html.theme-lcars .card:nth-child(7n+6) { border-left-color: var(--lc-lav);    }
+html.theme-lcars .card:nth-child(7n+0) { border-left-color: var(--lc-gold);   }
+
+html.theme-lcars .card-header {
+  background: #0A0A0A;
+  border-bottom: 1px solid #1a1a1a;
+  padding: 0.55rem 1rem;
+}
+html.theme-lcars .card-name {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-weight: 900;
+  font-size: 0.8rem;
+  color: var(--lc-orange);
+}
+
+/* Card name colour matches left border */
+html.theme-lcars .card:nth-child(7n+1) .card-name { color: var(--lc-orange); }
+html.theme-lcars .card:nth-child(7n+2) .card-name { color: var(--lc-purple); }
+html.theme-lcars .card:nth-child(7n+3) .card-name { color: var(--lc-blue);   }
+html.theme-lcars .card:nth-child(7n+4) .card-name { color: var(--lc-tan);    }
+html.theme-lcars .card:nth-child(7n+5) .card-name { color: var(--lc-cyan);   }
+html.theme-lcars .card:nth-child(7n+6) .card-name { color: var(--lc-lav);    }
+html.theme-lcars .card:nth-child(7n+0) .card-name { color: var(--lc-gold);   }
+
+html.theme-lcars .card-link { color: var(--lc-dim); font-size: 0.62rem; }
+
+/* ── Badges → LCARS solid-fill status blocks ─────────────────────────── */
+html.theme-lcars .badge {
+  border-radius: 0;
+  border: none;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  font-size: 0.6rem;
+  padding: 0.22rem 0.55rem;
+}
+html.theme-lcars .badge-up      { background: var(--lc-green);  color: #000; }
+html.theme-lcars .badge-down    { background: var(--lc-red);    color: #fff; }
+html.theme-lcars .badge-anomaly { background: var(--lc-gold);   color: #000; }
+
+/* ── Stats row ───────────────────────────────────────────────────────── */
+html.theme-lcars .stats-row {
+  background: var(--lc-bar);
+  border-bottom: 1px solid #1a1a1a;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+html.theme-lcars .stat-label       { color: var(--lc-dim); font-size: 0.6rem; }
+html.theme-lcars .stat-val         { color: var(--lc-text); font-weight: 700; }
+html.theme-lcars .stat-val.anomaly-val { color: var(--lc-gold); }
+
+/* ── SVG graphs — LCARS recolour ─────────────────────────────────────── */
+html.theme-lcars .svg-wrap         { background: var(--lc-bg); }
+html.theme-lcars .svg-wrap .graph-bg    { fill:   #000 !important; }
+html.theme-lcars .svg-wrap .grid-line   { stroke: #1a1a1a !important; }
+html.theme-lcars .svg-wrap .axis-line   { stroke: var(--lc-orange) !important; opacity: 0.4; }
+html.theme-lcars .svg-wrap .latency-line { stroke: var(--lc-orange) !important; stroke-width: 2px !important; }
+html.theme-lcars .svg-wrap .dot-ok      { fill:   var(--lc-orange) !important; }
+html.theme-lcars .svg-wrap .dot-anomaly { fill:   var(--lc-gold) !important; stroke: #664400 !important; }
+html.theme-lcars .svg-wrap .down-marker { stroke: var(--lc-red) !important; }
+html.theme-lcars .svg-wrap text         { fill:   var(--lc-dim) !important; }
+
+/* Uptime bar recolour */
+html.theme-lcars .stats-row svg rect:last-child { fill: var(--lc-orange) !important; }
+html.theme-lcars .stats-row svg rect:first-child { fill: #1a1a1a !important; }
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+html.theme-lcars footer {
+  border-top: 6px solid var(--lc-purple);
+  color: var(--lc-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.68rem;
+  margin-top: 1.5rem;
+}
+html.theme-lcars footer::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(to right,
+    var(--lc-orange) 0% 40%,
+    var(--lc-gold)   40% 60%,
+    var(--lc-tan)    60% 100%);
+  margin-bottom: 1rem;
+}
+html.theme-lcars .footer-links a { color: var(--lc-orange); }
+"""
+
+# Synchronous anti-FOCT: applied before first paint, avoids theme flash on page refresh
+ANTI_FOCT = (
+    "<script>"
+    "(function(){"
+    "var t=localStorage.getItem('obs-theme');"
+    "if(t==='lcars')document.documentElement.classList.add('theme-lcars');"
+    "})()"
+    "</script>"
+)
+
+THEME_JS = """<script>
+(function () {
+  'use strict';
+  var KEY = 'obs-theme';
+
+  function applyTheme(name) {
+    if (name === 'lcars') {
+      document.documentElement.classList.add('theme-lcars');
+    } else {
+      document.documentElement.classList.remove('theme-lcars');
+    }
+    var btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = name === 'lcars' ? '◀ DEFAULT' : 'LCARS ▶';
+    localStorage.setItem(KEY, name);
+  }
+
+  window.__toggleTheme = function () {
+    var current = localStorage.getItem(KEY) || 'default';
+    applyTheme(current === 'lcars' ? 'default' : 'lcars');
+  };
+
+  // Sync button label to current state on load
+  var saved = localStorage.getItem(KEY) || 'default';
+  var btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = saved === 'lcars' ? '◀ DEFAULT' : 'LCARS ▶';
+})();
+</script>"""
 
 
 def pct_bar(pct: float) -> str:
@@ -487,6 +838,8 @@ def render_dashboard(conn) -> str:
 <meta http-equiv="refresh" content="60">
 <title>Observatory — wesley.thesisko.com</title>
 <style>{CSS}</style>
+<style>{LCARS_CSS}</style>
+{ANTI_FOCT}
 </head>
 <body>
 <header>
@@ -499,6 +852,7 @@ def render_dashboard(conn) -> str:
         <a href="/observatory/api">API</a>
         <a href="/observatory/export.csv">CSV</a>
         <a href="/status/">Status</a>
+        <button id="theme-btn" class="theme-toggle" onclick="__toggleTheme()">LCARS ▶</button>
       </nav>
     </div>
   </div>
@@ -520,6 +874,7 @@ def render_dashboard(conn) -> str:
     </div>
   </div>
 </footer>
+{THEME_JS}
 </body>
 </html>"""
 
