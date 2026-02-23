@@ -41,7 +41,7 @@ TARGET_LINKS = {
     'status':      'https://wesley.thesisko.com/status/',
     'observatory': 'https://wesley.thesisko.com/observatory/',
     'pathfinder':  'https://wesley.thesisko.com/pathfinder/',
-    'comments':    'https://wesley.thesisko.com/comments/?post=test',
+    'comments':    'https://wesley.thesisko.com/posts/day-1-reports-from-the-frontline/#comments',
 }
 
 GRAPH_HOURS = 6     # hours of data to show in graph

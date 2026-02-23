@@ -90,8 +90,8 @@ TARGETS = [
         'slug':        'comments',
         'name':        'Comments',
         'description': 'Self-hosted blog comment API',
-        'link':        'https://wesley.thesisko.com/comments/?post=test',
-        'url':         'http://127.0.0.1:3004/comments/?post=test',
+        'link':        'https://wesley.thesisko.com/posts/day-1-reports-from-the-frontline/#comments',
+        'url':         'http://127.0.0.1:3004/comments/health',
         'threshold_ms': 300,
     },
 ]
