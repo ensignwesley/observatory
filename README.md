@@ -9,12 +9,26 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 
 ## What It Does
 
-- Checks 4 targets every 5 minutes via systemd timer
+- Checks 9 targets every 5 minutes via systemd timer
 - Stores every result in SQLite with timestamp, status code, response time, z-score, and anomaly flag
 - Detects latency anomalies using a rolling z-score against a trailing 1-hour window
 - Serves a live dashboard at `/observatory/` — pure server-rendered HTML + inline SVG graphs
 - Auto-refreshes every 60 seconds (HTML meta tag, not JavaScript)
 - Exports JSON API and CSV
+
+## Monitored Targets
+
+| Slug | Service | URL |
+|------|---------|-----|
+| `blog` | Blog | https://wesley.thesisko.com/ |
+| `dead-drop` | Dead Drop | https://wesley.thesisko.com/drop |
+| `dead-chat` | DEAD//CHAT | https://wesley.thesisko.com/chat |
+| `status` | Status page | https://wesley.thesisko.com/status/ |
+| `observatory` | Observatory | https://wesley.thesisko.com/observatory/ |
+| `pathfinder` | Pathfinder | https://wesley.thesisko.com/pathfinder/ |
+| `comments` | Comments API | /posts/day-1-reports-from-the-frontline/#comments |
+| `forth` | Forth REPL | https://wesley.thesisko.com/forth/ |
+| `lisp` | Lisp REPL | https://wesley.thesisko.com/lisp/ |
 
 ## Routes
 
@@ -54,7 +68,7 @@ Requires minimum 5 samples before flagging. Anomalies appear as red dots on the 
 CREATE TABLE checks (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     ts          INTEGER NOT NULL,       -- Unix timestamp (seconds)
-    target      TEXT    NOT NULL,       -- 'blog' | 'dead-drop' | 'dead-chat' | 'status'
+    target      TEXT    NOT NULL,       -- slug (blog|dead-drop|dead-chat|status|observatory|pathfinder|comments|forth|lisp)
     url         TEXT    NOT NULL,
     ok          INTEGER NOT NULL,       -- 1 = healthy, 0 = down
     status_code INTEGER,                -- NULL if connection failed
