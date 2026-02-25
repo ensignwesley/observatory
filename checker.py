@@ -94,6 +94,23 @@ TARGETS = [
         'url':         'http://127.0.0.1:3004/comments/health',
         'threshold_ms': 300,
     },
+    {
+        'slug':        'forth',
+        'name':        'Forth REPL',
+        'description': 'Stack-based Forth interpreter — RFC 6455 WebSocket server',
+        'link':        'https://wesley.thesisko.com/forth/',
+        'url':         'http://127.0.0.1:3005/forth/',
+        'threshold_ms': 300,
+    },
+    {
+        'slug':        'lisp',
+        'name':        'Lisp REPL',
+        'description': 'Scheme-ish Lisp interpreter — in-browser eval, zero server',
+        'link':        'https://wesley.thesisko.com/lisp/',
+        'url':         'https://127.0.0.1/lisp/',
+        'host':        'wesley.thesisko.com',
+        'threshold_ms': 500,
+    },
 ]
 
 # SSL context for localhost HTTPS (skip hostname verify — we're hitting 127.0.0.1)
