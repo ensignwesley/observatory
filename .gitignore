@@ -3,3 +3,5 @@ observatory.db
 *.db-wal
 __pycache__/
 *.pyc
+# Alert config contains credentials — never commit
+alert-config.json

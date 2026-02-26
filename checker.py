@@ -7,6 +7,7 @@ Runs every 5 minutes via systemd timer.
   - Writes time-series results to SQLite
   - Computes rolling z-score anomaly detection against trailing 1-hour window
   - Writes backward-compat data.json for existing /status/ page
+  - Sends push alerts on state transitions (Telegram / webhook) — optional config
 """
 
 import json
@@ -27,10 +28,13 @@ JSON_OUTS = [
     HOME / 'blog/public/status/data.json',
     HOME / 'blog/static/status/data.json',
 ]
+ALERT_CONFIG_PATH = HOME / 'observatory/alert-config.json'
 
 ANOMALY_Z         = 2.0    # z-score threshold for anomaly flag
 ANOMALY_WINDOW_S  = 3600   # trailing window in seconds (1 hour)
 ANOMALY_MIN_SAMP  = 5      # minimum samples before flagging
+
+ALERT_THRESHOLD   = 2      # consecutive failures before DOWN alert fires
 
 # Targets: url is the backend address; host overrides the HTTP Host header.
 # Using localhost IPs avoids external DNS and tests the full local stack.
@@ -135,6 +139,14 @@ CREATE TABLE IF NOT EXISTS checks (
 );
 CREATE INDEX IF NOT EXISTS idx_target_ts ON checks(target, ts);
 CREATE INDEX IF NOT EXISTS idx_ts        ON checks(ts);
+
+CREATE TABLE IF NOT EXISTS alert_state (
+    slug                    TEXT    PRIMARY KEY,
+    state                   TEXT    NOT NULL DEFAULT 'UP',   -- 'UP' or 'DOWN'
+    consecutive_failures    INTEGER NOT NULL DEFAULT 0,
+    last_alerted_at         REAL,    -- Unix timestamp of last notification
+    last_state_change_at    REAL     -- Unix timestamp of last UP/DOWN transition
+);
 """
 
 
@@ -144,6 +156,188 @@ def open_db(path: Path) -> sqlite3.Connection:
     conn.executescript(SCHEMA)
     conn.commit()
     return conn
+
+
+# ── Alert config ───────────────────────────────────────────────────────────────
+
+def load_alert_config() -> dict | None:
+    """Load alert-config.json if it exists and alerting is enabled.
+    Returns config dict or None if alerting is disabled / not configured.
+    """
+    if not ALERT_CONFIG_PATH.exists():
+        return None
+    try:
+        cfg = json.loads(ALERT_CONFIG_PATH.read_text())
+        if not cfg.get('alerting', {}).get('enabled', False):
+            return None
+        return cfg['alerting']
+    except Exception as exc:
+        print(f"[observatory] alert-config.json load error: {exc}")
+        return None
+
+
+# ── Alert dispatch ─────────────────────────────────────────────────────────────
+
+def _send_telegram(token: str, chat_id: str, text: str):
+    """Send a Telegram message via Bot API."""
+    url  = f"https://api.telegram.org/bot{token}/sendMessage"
+    body = json.dumps({'chat_id': chat_id, 'text': text, 'parse_mode': 'HTML'}).encode()
+    req  = urllib.request.Request(url, data=body,
+                                  headers={'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read())
+            if not result.get('ok'):
+                print(f"[observatory] telegram error: {result}")
+    except Exception as exc:
+        print(f"[observatory] telegram send failed: {exc}")
+
+
+def _send_webhook(url: str, method: str, payload: dict):
+    """POST (or GET) a webhook with a JSON payload."""
+    method = method.upper()
+    body   = json.dumps(payload).encode()
+    req    = urllib.request.Request(url, data=body,
+                                    headers={'Content-Type': 'application/json'},
+                                    method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=10):
+            pass
+    except Exception as exc:
+        print(f"[observatory] webhook send failed: {exc}")
+
+
+def dispatch_alert(cfg: dict, tgt: dict, new_state: str,
+                   consecutive_failures: int, down_since: float | None):
+    """Fire configured alert channels for a state transition."""
+    name = tgt['name']
+    link = tgt['link']
+    now  = time.time()
+
+    if new_state == 'DOWN':
+        emoji   = '🔴'
+        subject = f"{emoji} {name} — DOWN"
+        detail  = f"Unreachable after {consecutive_failures} consecutive failures."
+        body    = f"{subject}\n{detail}\n{link}"
+    else:  # UP (recovery)
+        emoji   = '🟢'
+        subject = f"{emoji} {name} — UP (recovered)"
+        if down_since:
+            minutes = int((now - down_since) / 60)
+            detail  = f"Was down approximately {minutes} min."
+        else:
+            detail = "Service restored."
+        body = f"{subject}\n{detail}\n{link}"
+
+    # Telegram
+    tg = cfg.get('channels', {}).get('telegram', {})
+    if tg.get('token') and tg.get('chat_id'):
+        _send_telegram(tg['token'], tg['chat_id'], body)
+        print(f"[observatory] alert → telegram: {subject}")
+
+    # Webhook
+    wh = cfg.get('channels', {}).get('webhook', {})
+    if wh.get('url'):
+        _send_webhook(
+            wh['url'],
+            wh.get('method', 'POST'),
+            {
+                'service':    name,
+                'slug':       tgt['slug'],
+                'state':      new_state,
+                'message':    body,
+                'link':       link,
+                'timestamp':  datetime.now(timezone.utc).isoformat(),
+            }
+        )
+        print(f"[observatory] alert → webhook: {subject}")
+
+
+# ── Alert state machine ────────────────────────────────────────────────────────
+
+def update_alert_state(conn, tgt: dict, ok: bool,
+                       alert_cfg: dict | None, now_ts: int):
+    """Update per-target alert state and fire transitions when warranted.
+
+    State machine:
+      UP  + failure  → increment consecutive_failures
+                        if failures >= ALERT_THRESHOLD → flip to DOWN, alert
+      UP  + success  → reset consecutive_failures to 0 (stay UP)
+      DOWN + failure → stay DOWN (already alerted, no spam)
+      DOWN + success → flip to UP, alert (recovery)
+    """
+    slug = tgt['slug']
+
+    row = conn.execute(
+        "SELECT state, consecutive_failures, last_state_change_at "
+        "FROM alert_state WHERE slug=?", (slug,)
+    ).fetchone()
+
+    if row is None:
+        # First time we've seen this slug — seed it
+        conn.execute(
+            "INSERT INTO alert_state (slug, state, consecutive_failures, "
+            "last_alerted_at, last_state_change_at) VALUES (?,?,?,?,?)",
+            (slug, 'UP', 0, None, None)
+        )
+        conn.commit()
+        row = ('UP', 0, None)
+
+    current_state, consec, last_change_at = row
+
+    if current_state == 'UP':
+        if ok:
+            # Healthy — reset counter if it drifted up
+            if consec > 0:
+                conn.execute(
+                    "UPDATE alert_state SET consecutive_failures=0 WHERE slug=?",
+                    (slug,)
+                )
+                conn.commit()
+        else:
+            # Failed — increment counter
+            new_consec = consec + 1
+            if new_consec >= ALERT_THRESHOLD:
+                # Flip to DOWN
+                conn.execute(
+                    "UPDATE alert_state SET state='DOWN', consecutive_failures=?, "
+                    "last_alerted_at=?, last_state_change_at=? WHERE slug=?",
+                    (new_consec, now_ts, now_ts, slug)
+                )
+                conn.commit()
+                print(f"[observatory] ⚡ STATE CHANGE: {slug} UP → DOWN "
+                      f"({new_consec} consecutive failures)")
+                if alert_cfg:
+                    dispatch_alert(alert_cfg, tgt, 'DOWN', new_consec, None)
+            else:
+                conn.execute(
+                    "UPDATE alert_state SET consecutive_failures=? WHERE slug=?",
+                    (new_consec, slug)
+                )
+                conn.commit()
+                print(f"[observatory]   {slug} failure {new_consec}/{ALERT_THRESHOLD} "
+                      f"(threshold not reached)")
+
+    else:  # current_state == 'DOWN'
+        if ok:
+            # Recovery — flip back to UP
+            conn.execute(
+                "UPDATE alert_state SET state='UP', consecutive_failures=0, "
+                "last_alerted_at=?, last_state_change_at=? WHERE slug=?",
+                (now_ts, now_ts, slug)
+            )
+            conn.commit()
+            print(f"[observatory] ✅ STATE CHANGE: {slug} DOWN → UP (recovered)")
+            if alert_cfg:
+                dispatch_alert(alert_cfg, tgt, 'UP', 0, last_change_at)
+        else:
+            # Still down — stay DOWN, no re-alert (anti-spam)
+            new_consec = consec + 1
+            conn.execute(
+                "UPDATE alert_state SET consecutive_failures=? WHERE slug=?",
+                (new_consec, slug)
+            )
+            conn.commit()
 
 
 # ── Checks ─────────────────────────────────────────────────────────────────────
@@ -203,8 +397,17 @@ def compute_anomaly(conn, slug: str, now_ts: int, current_ms: float):
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def run():
-    now_ts  = int(time.time())
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_ts    = int(time.time())
+    now_iso   = datetime.now(timezone.utc).isoformat()
+    alert_cfg = load_alert_config()
+
+    if alert_cfg:
+        threshold = alert_cfg.get('threshold', ALERT_THRESHOLD)
+        # Allow config to override the module-level constant
+        globals()['ALERT_THRESHOLD'] = threshold
+        print(f"[observatory] alerting ENABLED — threshold={threshold} failures")
+    else:
+        print("[observatory] alerting disabled (no alert-config.json or enabled:false)")
 
     conn    = open_db(DB_PATH)
     results = []
@@ -232,6 +435,10 @@ def run():
         ms_str = f"{response_ms:6.0f}ms" if response_ms is not None else "  ---  "
         flag   = "  ⚠ ANOMALY" if anomaly else ""
         print(f"[observatory] {'✓' if ok else '✗'} {tgt['name']:<12} {ms_str}{flag}")
+
+        # Alert state machine — runs regardless of alerting being enabled
+        # (state is tracked even when disabled, so it's accurate when you enable it)
+        update_alert_state(conn, tgt, ok, alert_cfg, now_ts)
 
         results.append({
             'name':        tgt['name'],

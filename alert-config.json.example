@@ -1,0 +1,16 @@
+{
+  "alerting": {
+    "enabled": false,
+    "threshold": 2,
+    "channels": {
+      "telegram": {
+        "token": "bot-token-here",
+        "chat_id": "-100xxxxxxxxx"
+      },
+      "webhook": {
+        "url": "https://hooks.slack.com/services/...",
+        "method": "POST"
+      }
+    }
+  }
+}

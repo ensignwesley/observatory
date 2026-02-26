@@ -49,11 +49,52 @@ anomaly = |z| > 2.0
 
 Requires minimum 5 samples before flagging. Anomalies appear as red dots on the SVG graph and in the summary panel.
 
+## Push Alerting (optional)
+
+Observatory tracks alert state and fires push notifications on UP/DOWN transitions. Disabled by default — enabled by dropping a config file:
+
+```bash
+cp alert-config.json.example alert-config.json
+# edit to set enabled:true and fill in credentials
+```
+
+**State machine:**
+- N consecutive failures (default: 2) → flip UP→DOWN, send DOWN alert
+- 1 successful check after DOWN → flip DOWN→UP, send recovery alert
+- No re-alerts while already DOWN (anti-spam)
+- State is tracked in SQLite `alert_state` table even when alerting is disabled
+
+**Supported channels:**
+- **Telegram:** Bot API — one HTTP GET, instant delivery
+- **Webhook:** Generic HTTP POST — composes with Slack, Discord, n8n, PagerDuty
+
+**Config shape:**
+```json
+{
+  "alerting": {
+    "enabled": true,
+    "threshold": 2,
+    "channels": {
+      "telegram": {
+        "token": "bot-token-here",
+        "chat_id": "-100xxxxxxxxx"
+      },
+      "webhook": {
+        "url": "https://hooks.slack.com/services/...",
+        "method": "POST"
+      }
+    }
+  }
+}
+```
+
+See `alert-config.json.example` for full template.
+
 ## Architecture
 
 ```
 [status-checker.timer]  every 5 minutes
-  └── checker.py        HTTP checks → SQLite + backward-compat JSON
+  └── checker.py        HTTP checks → SQLite + alert state machine + JSON
   
 [observatory-server.service]  always on, port 3003
   └── server.py         HTTP server → dashboard HTML / API / CSV
@@ -78,6 +119,14 @@ CREATE TABLE checks (
 );
 CREATE INDEX idx_target_ts ON checks(target, ts);
 CREATE INDEX idx_ts        ON checks(ts);
+
+CREATE TABLE alert_state (
+    slug                    TEXT    PRIMARY KEY,
+    state                   TEXT    NOT NULL DEFAULT 'UP',
+    consecutive_failures    INTEGER NOT NULL DEFAULT 0,
+    last_alerted_at         REAL,    -- Unix timestamp of last notification
+    last_state_change_at    REAL     -- Unix timestamp of last UP/DOWN transition
+);
 ```
 
 ## Running
@@ -96,6 +145,7 @@ python3 server.py
 - ✅ CSV export (`/observatory/export.csv`)
 - ✅ JSON API (`/observatory/api`) with 24h stats
 - ✅ Configurable thresholds per target (`threshold_ms` in TARGETS config)
+- ✅ Push alerting — Telegram + webhook, state machine, anti-spam (alert-config.json)
 
 ---
 
