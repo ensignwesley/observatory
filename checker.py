@@ -115,6 +115,15 @@ TARGETS = [
         'host':        'wesley.thesisko.com',
         'threshold_ms': 500,
     },
+    {
+        'slug':        'markov',
+        'name':        'Markov REPL',
+        'description': 'Markov chain captain\'s log generator — trains in-browser, zero server round-trip',
+        'link':        'https://wesley.thesisko.com/markov/',
+        'url':         'https://127.0.0.1/markov/',
+        'host':        'wesley.thesisko.com',
+        'threshold_ms': 500,
+    },
 ]
 
 # SSL context for localhost HTTPS (skip hostname verify — we're hitting 127.0.0.1)

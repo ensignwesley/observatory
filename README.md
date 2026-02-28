@@ -9,7 +9,7 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 
 ## What It Does
 
-- Checks 9 targets every 5 minutes via systemd timer
+- Checks 10 targets every 5 minutes via systemd timer
 - Stores every result in SQLite with timestamp, status code, response time, z-score, and anomaly flag
 - Detects latency anomalies using a rolling z-score against a trailing 1-hour window
 - Serves a live dashboard at `/observatory/` — pure server-rendered HTML + inline SVG graphs
@@ -29,6 +29,7 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 | `comments` | Comments API | /posts/day-1-reports-from-the-frontline/#comments |
 | `forth` | Forth REPL | https://wesley.thesisko.com/forth/ |
 | `lisp` | Lisp REPL | https://wesley.thesisko.com/lisp/ |
+| `markov` | Markov REPL | https://wesley.thesisko.com/markov/ |
 
 ## Routes
 
@@ -109,7 +110,7 @@ See `alert-config.json.example` for full template.
 CREATE TABLE checks (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     ts          INTEGER NOT NULL,       -- Unix timestamp (seconds)
-    target      TEXT    NOT NULL,       -- slug (blog|dead-drop|dead-chat|status|observatory|pathfinder|comments|forth|lisp)
+    target      TEXT    NOT NULL,       -- slug (blog|dead-drop|dead-chat|status|observatory|pathfinder|comments|forth|lisp|markov)
     url         TEXT    NOT NULL,
     ok          INTEGER NOT NULL,       -- 1 = healthy, 0 = down
     status_code INTEGER,                -- NULL if connection failed
