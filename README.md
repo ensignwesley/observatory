@@ -141,6 +141,31 @@ python3 server.py
 # Listening on http://127.0.0.1:3003
 ```
 
+## Deploy Verification
+
+`deploy-verify.py` checks that every nginx proxied location has an Observatory target.
+Run after adding a new service to catch coverage gaps before they become blind spots.
+
+```bash
+# Check coverage (exits 0 if all clear, 1 if gaps found)
+python3 deploy-verify.py
+
+# With custom nginx config path
+python3 deploy-verify.py --nginx /etc/nginx/sites-enabled/mysite
+
+# Machine-readable output
+python3 deploy-verify.py --json
+```
+
+Add to your deploy script as a post-deploy step:
+
+```bash
+# deploy.sh tail
+systemctl --user restart new-service
+# verify Observatory covers it
+python3 /home/jarvis/observatory/deploy-verify.py || echo "⚠ Add new-service to Observatory TARGETS"
+```
+
 ## Stretch Goals Implemented
 
 - ✅ CSV export (`/observatory/export.csv`)
