@@ -363,11 +363,14 @@ def check_target(target: dict):
         ctx  = _SSL if url.startswith('https') else None
         with urllib.request.urlopen(req, context=ctx, timeout=5) as resp:
             ms = (time.monotonic() - t0) * 1000
-            return (resp.status < 500), resp.status, ms
+            return (200 <= resp.status < 300), resp.status, ms   # 2xx only = healthy
 
     except urllib.error.HTTPError as exc:
+        # Got an HTTP response — service is up but returning an error code.
+        # 4xx = misconfigured health endpoint; 5xx = server-side error.
+        # Both are not-ok so the alert state machine fires after threshold.
         ms = (time.monotonic() - t0) * 1000
-        return (exc.code < 500), exc.code, ms
+        return False, exc.code, ms
 
     except Exception:
         ms = (time.monotonic() - t0) * 1000

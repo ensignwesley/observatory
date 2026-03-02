@@ -302,8 +302,9 @@ header { border-bottom:1px solid var(--border); padding:1.5rem 0; }
 .summary-bar.all-up  { border-color: rgba(74,222,128,.3); background:rgba(74,222,128,.05); }
 .summary-bar.degraded { border-color: rgba(248,113,113,.3); background:rgba(248,113,113,.05); }
 .status-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
-.dot-up   { background:var(--green); box-shadow:0 0 6px var(--green); }
-.dot-down { background:var(--red);   box-shadow:0 0 6px var(--red); }
+.dot-up   { background:var(--green);  box-shadow:0 0 6px var(--green); }
+.dot-down { background:var(--red);    box-shadow:0 0 6px var(--red); }
+.dot-warn { background:#fbbf24;       box-shadow:0 0 6px #fbbf24; }
 .dot-warn { background:#fb923c;      box-shadow:0 0 6px #fb923c; }
 .summary-ts { margin-left:auto; color:var(--muted); }
 
@@ -344,6 +345,7 @@ header { border-bottom:1px solid var(--border); padding:1.5rem 0; }
 }
 .badge-up      { background:rgba(74,222,128,.12);  color:var(--green);  border:1px solid rgba(74,222,128,.3); }
 .badge-down    { background:rgba(248,113,113,.12); color:var(--red);    border:1px solid rgba(248,113,113,.3); }
+.badge-warn    { background:rgba(251,191, 36,.12); color:#fbbf24;       border:1px solid rgba(251,191, 36,.3); }
 .badge-anomaly { background:rgba(248,113,113,.12); color:var(--red);    border:1px solid rgba(248,113,113,.3); }
 
 .stats-row {
@@ -624,6 +626,7 @@ html.theme-lcars .badge {
 }
 html.theme-lcars .badge-up      { background: var(--lc-green);  color: #000; }
 html.theme-lcars .badge-down    { background: var(--lc-red);    color: #fff; }
+html.theme-lcars .badge-warn    { background: var(--lc-gold);   color: #000; }
 html.theme-lcars .badge-anomaly { background: var(--lc-gold);   color: #000; }
 
 /* ── Stats row ───────────────────────────────────────────────────────── */
@@ -734,14 +737,20 @@ def render_dashboard(conn) -> str:
     latest     = latest_per_target(conn)
     anomalies  = recent_anomalies(conn, hours=1)
     # Targets with no data yet (None) are considered "pending", not "down"
-    all_up     = all(v is None or v['ok'] for v in latest.values())
-    has_anomaly= len(anomalies) > 0
+    all_up      = all(v is None or v['ok'] for v in latest.values())
+    # "erroring": service responds but with HTTP error (4xx/5xx) — up but not healthy
+    has_error   = any(v is not None and not v['ok'] and v['status_code'] is not None
+                      for v in latest.values())
+    has_anomaly = len(anomalies) > 0
 
     # ── Summary bar ─────────────────────────────────────────────────────────────
     if all_up and not has_anomaly:
         bar_class, dot_class, bar_text = 'all-up',   'dot-up',   'ALL SYSTEMS OPERATIONAL'
     elif all_up and has_anomaly:
         bar_class, dot_class, bar_text = 'degraded', 'dot-warn', 'OPERATIONAL — LATENCY ANOMALIES DETECTED'
+    elif has_error and not any(v is not None and not v['ok'] and v['status_code'] is None
+                               for v in latest.values()):
+        bar_class, dot_class, bar_text = 'degraded', 'dot-warn', 'DEGRADED — HTTP ERRORS DETECTED'
     else:
         bar_class, dot_class, bar_text = 'degraded', 'dot-down', 'DEGRADED — SERVICE OUTAGE DETECTED'
 
@@ -786,11 +795,17 @@ def render_dashboard(conn) -> str:
         name  = TARGET_NAMES[slug]
         link  = TARGET_LINKS[slug]
 
-        # Status badge
+        # Status badge — three failure modes distinguished:
+        #   ok=True              → healthy (2xx)
+        #   ok=False, code 4xx  → warn: up but health endpoint erroring
+        #   ok=False, code 5xx  → warn: up but server-side error
+        #   ok=False, code None → down: connection refused / timeout
         if cur is None:
             badge = '<span class="badge badge-down">no data</span>'
-        elif not cur['ok']:
+        elif not cur['ok'] and cur['status_code'] is None:
             badge = '<span class="badge badge-down">down</span>'
+        elif not cur['ok'] and cur['status_code'] is not None:
+            badge = f'<span class="badge badge-warn">HTTP {cur["status_code"]}</span>'
         elif cur['anomaly']:
             badge = '<span class="badge badge-anomaly">anomaly</span>'
         else:
