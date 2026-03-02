@@ -53,7 +53,7 @@ TARGETS = [
         'name':        'Dead Drop',
         'description': 'Zero-knowledge burn-after-read secret sharing',
         'link':        'https://wesley.thesisko.com/drop',
-        'url':         'http://127.0.0.1:3001/drop',
+        'url':         'http://127.0.0.1:3001/drop/health',
         'threshold_ms': 300,
     },
     {
@@ -61,7 +61,7 @@ TARGETS = [
         'name':        'DEAD//CHAT',
         'description': 'Real-time WebSocket chat room',
         'link':        'https://wesley.thesisko.com/chat',
-        'url':         'http://127.0.0.1:3002/chat',
+        'url':         'http://127.0.0.1:3002/chat/health',
         'threshold_ms': 300,
     },
     {
