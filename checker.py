@@ -33,6 +33,10 @@ ALERT_CONFIG_PATH = HOME / 'observatory/alert-config.json'
 ANOMALY_Z         = 2.0    # z-score threshold for anomaly flag
 ANOMALY_WINDOW_S  = 3600   # trailing window in seconds (1 hour)
 ANOMALY_MIN_SAMP  = 5      # minimum samples before flagging
+ANOMALY_STD_FLOOR = 5.0    # ms — minimum effective std dev; prevents noise amplification
+                            #   on fast/stable services (e.g. Forth at 1ms baseline)
+ANOMALY_MIN_DELTA = 15.0   # ms — absolute delta required before flagging anomaly;
+                            #   z-score alone can fire on sub-millisecond noise
 
 ALERT_THRESHOLD   = 2      # consecutive failures before DOWN alert fires
 
@@ -401,8 +405,18 @@ def compute_anomaly(conn, slug: str, now_ts: int, current_ms: float):
     if std == 0:
         return 0.0, 0
 
-    z       = (current_ms - mean) / std
-    anomaly = 1 if abs(z) > ANOMALY_Z else 0
+    # Apply std dev floor: prevents tiny natural variance from inflating z-scores
+    # on fast services. A 1ms service with std=0.2ms would produce z=10 for a 3ms
+    # response; with a 5ms floor, that same response produces z=0.4 — not an anomaly.
+    effective_std = max(std, ANOMALY_STD_FLOOR)
+
+    z = (current_ms - mean) / effective_std
+
+    # Apply absolute delta guard: z > threshold is necessary but not sufficient.
+    # The actual response time must deviate by at least ANOMALY_MIN_DELTA_MS from
+    # the mean before we consider it operationally significant.
+    delta   = abs(current_ms - mean)
+    anomaly = 1 if abs(z) > ANOMALY_Z and delta > ANOMALY_MIN_DELTA else 0
     return round(z, 3), anomaly
 
 
