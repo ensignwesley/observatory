@@ -99,7 +99,7 @@ TARGETS = [
         'name':        'Comments',
         'description': 'Self-hosted blog comment API',
         'link':        'https://wesley.thesisko.com/posts/day-1-reports-from-the-frontline/#comments',
-        'url':         'http://127.0.0.1:3004/comments/',   # root: 200 + API manifest; exercises more code paths
+        'url':         'http://127.0.0.1:3004/comments/health',   # dedicated health endpoint (v1.1)
         'threshold_ms': 300,
     },
     {
@@ -107,7 +107,7 @@ TARGETS = [
         'name':        'Forth REPL',
         'description': 'Stack-based Forth interpreter — RFC 6455 WebSocket server',
         'link':        'https://wesley.thesisko.com/forth/',
-        'url':         'http://127.0.0.1:3005/forth/',
+        'url':         'http://127.0.0.1:3005/forth/health',
         'threshold_ms': 300,
     },
     {
