@@ -98,7 +98,7 @@ See `alert-config.json.example` for full template.
   └── checker.py        HTTP checks → SQLite + alert state machine + JSON
   
 [observatory-server.service]  always on, port 3003
-  └── server.py         HTTP server → dashboard HTML / API / CSV
+  └── server.py         HTTP server → dashboard HTML / API / CSV (graceful SIGTERM via signal handler)
   
 [nginx]
   └── /observatory/ → proxy_pass http://127.0.0.1:3003
