@@ -15,7 +15,9 @@ import csv
 import io
 import json
 import math
+import signal
 import sqlite3
+import threading
 import time
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -1032,9 +1034,20 @@ def main():
     server = ThreadingHTTPServer(('127.0.0.1', PORT), Handler)
     print(f'[observatory] Listening on http://127.0.0.1:{PORT}')
     print(f'[observatory] Dashboard: http://127.0.0.1:{PORT}/observatory')
+
+    def _shutdown(signum, frame):
+        print('[observatory] SIGTERM received, shutting down', flush=True)
+        # server.shutdown() blocks until serve_forever() returns; call from a
+        # daemon thread so the signal handler returns immediately.
+        threading.Thread(target=server.shutdown, daemon=True).start()
+
+    signal.signal(signal.SIGTERM, _shutdown)
+
     try:
         server.serve_forever()
     except KeyboardInterrupt:
+        pass
+    finally:
         print('[observatory] Shutting down')
         server.server_close()
 
