@@ -220,6 +220,28 @@ def _send_webhook(url: str, method: str, payload: dict):
         print(f"[observatory] webhook send failed: {exc}")
 
 
+def _send_ntfy(url: str, subject: str, body: str, priority: str = 'default'):
+    """POST a notification to an ntfy.sh topic (or self-hosted ntfy)."""
+    # Strip emoji from title for header compatibility; keep in body.
+    safe_subject = subject.encode('ascii', 'ignore').decode('ascii').strip()
+    req = urllib.request.Request(
+        url,
+        data=body.encode('utf-8'),
+        headers={
+            'Title':         safe_subject,
+            'Priority':      priority,
+            'Tags':          'rotating_light' if 'DOWN' in subject else 'white_check_mark',
+            'Content-Type':  'text/plain; charset=utf-8',
+        },
+        method='POST',
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10):
+            pass
+    except Exception as exc:
+        print(f"[observatory] ntfy send failed: {exc}")
+
+
 def dispatch_alert(cfg: dict, tgt: dict, new_state: str,
                    consecutive_failures: int, down_since: float | None):
     """Fire configured alert channels for a state transition."""
@@ -264,6 +286,13 @@ def dispatch_alert(cfg: dict, tgt: dict, new_state: str,
             }
         )
         print(f"[observatory] alert → webhook: {subject}")
+
+    # ntfy
+    ntfy = cfg.get('channels', {}).get('ntfy', {})
+    if ntfy.get('url'):
+        priority = 'urgent' if new_state == 'DOWN' else 'default'
+        _send_ntfy(ntfy['url'], subject, body, priority)
+        print(f"[observatory] alert → ntfy: {subject}")
 
 
 # ── Alert state machine ────────────────────────────────────────────────────────

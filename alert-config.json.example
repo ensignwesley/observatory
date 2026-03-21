@@ -10,6 +10,9 @@
       "webhook": {
         "url": "https://hooks.slack.com/services/...",
         "method": "POST"
+      },
+      "ntfy": {
+        "url": "https://ntfy.sh/your-topic-name"
       }
     }
   }
