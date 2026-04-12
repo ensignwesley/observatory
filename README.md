@@ -18,18 +18,18 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 
 ## Monitored Targets
 
-| Slug | Service | URL |
-|------|---------|-----|
-| `blog` | Blog | https://wesley.thesisko.com/ |
-| `dead-drop` | Dead Drop | https://wesley.thesisko.com/drop |
-| `dead-chat` | DEAD//CHAT | https://wesley.thesisko.com/chat |
-| `status` | Status page | https://wesley.thesisko.com/status/ |
-| `observatory` | Observatory | https://wesley.thesisko.com/observatory/ |
-| `pathfinder` | Pathfinder | https://wesley.thesisko.com/pathfinder/ |
-| `comments` | Comments API | /posts/day-1-reports-from-the-frontline/#comments |
-| `forth` | Forth REPL | https://wesley.thesisko.com/forth/ |
-| `lisp` | Lisp REPL | https://wesley.thesisko.com/lisp/ |
-| `markov` | Markov REPL | https://wesley.thesisko.com/markov/ |
+| Slug | Service | Public Link | Health Check URL |
+|------|---------|-------------|------------------|
+| `blog` | Blog | https://wesley.thesisko.com/ | `https://127.0.0.1/` (Host: `wesley.thesisko.com`) |
+| `dead-drop` | Dead Drop | https://wesley.thesisko.com/drop | `http://127.0.0.1:3001/drop/health` |
+| `dead-chat` | DEAD//CHAT | https://wesley.thesisko.com/chat | `http://127.0.0.1:3002/chat/health` |
+| `status` | Status page | https://wesley.thesisko.com/status/ | `https://127.0.0.1/status/` (Host: `wesley.thesisko.com`) |
+| `observatory` | Observatory | https://wesley.thesisko.com/observatory/ | `http://127.0.0.1:3003/observatory/` |
+| `pathfinder` | Pathfinder | https://wesley.thesisko.com/pathfinder/ | `https://127.0.0.1/pathfinder/` (Host: `wesley.thesisko.com`) |
+| `comments` | Comments API | https://wesley.thesisko.com/posts/day-1-reports-from-the-frontline/#comments | `http://127.0.0.1:3004/comments/health` |
+| `forth` | Forth REPL | https://wesley.thesisko.com/forth/ | `http://127.0.0.1:3005/health` |
+| `lisp` | Lisp REPL | https://wesley.thesisko.com/lisp/ | `https://127.0.0.1/lisp/` (Host: `wesley.thesisko.com`) |
+| `markov` | Markov REPL | https://wesley.thesisko.com/markov/ | `https://127.0.0.1/markov/` (Host: `wesley.thesisko.com`) |
 
 ## Routes
 
@@ -68,6 +68,7 @@ cp alert-config.json.example alert-config.json
 **Supported channels:**
 - **Telegram:** Bot API — one HTTP GET, instant delivery
 - **Webhook:** Generic HTTP POST — composes with Slack, Discord, n8n, PagerDuty
+- **ntfy:** Topic publish over HTTP POST — works with ntfy.sh or self-hosted ntfy
 
 **Config shape:**
 ```json
@@ -83,6 +84,9 @@ cp alert-config.json.example alert-config.json
       "webhook": {
         "url": "https://hooks.slack.com/services/...",
         "method": "POST"
+      },
+      "ntfy": {
+        "url": "https://ntfy.sh/your-topic-name"
       }
     }
   }
@@ -171,7 +175,7 @@ python3 /home/jarvis/observatory/deploy-verify.py || echo "⚠ Add new-service t
 - ✅ CSV export (`/observatory/export.csv`)
 - ✅ JSON API (`/observatory/api`) with 24h stats
 - ✅ Configurable thresholds per target (`threshold_ms` in TARGETS config)
-- ✅ Push alerting — Telegram + webhook, state machine, anti-spam (alert-config.json)
+- ✅ Push alerting — Telegram + webhook + ntfy, state machine, anti-spam (alert-config.json)
 
 ---
 
