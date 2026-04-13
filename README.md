@@ -27,7 +27,7 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 | `observatory` | Observatory | https://wesley.thesisko.com/observatory/ | `http://127.0.0.1:3003/observatory/` |
 | `pathfinder` | Pathfinder | https://wesley.thesisko.com/pathfinder/ | `https://127.0.0.1/pathfinder/` (Host: `wesley.thesisko.com`) |
 | `comments` | Comments API | https://wesley.thesisko.com/posts/day-1-reports-from-the-frontline/#comments | `http://127.0.0.1:3004/comments/health` |
-| `forth` | Forth REPL | https://wesley.thesisko.com/forth/ | `http://127.0.0.1:3005/health` |
+| `forth` | Forth REPL | https://wesley.thesisko.com/forth/ | `http://127.0.0.1:3005/forth/health` |
 | `lisp` | Lisp REPL | https://wesley.thesisko.com/lisp/ | `https://127.0.0.1/lisp/` (Host: `wesley.thesisko.com`) |
 | `markov` | Markov REPL | https://wesley.thesisko.com/markov/ | `https://127.0.0.1/markov/` (Host: `wesley.thesisko.com`) |
 
