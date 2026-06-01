@@ -442,7 +442,7 @@ def compute_anomaly(conn, slug: str, now_ts: int, current_ms: float):
     z = (current_ms - mean) / effective_std
 
     # Apply absolute delta guard: z > threshold is necessary but not sufficient.
-    # The actual response time must deviate by at least ANOMALY_MIN_DELTA_MS from
+    # The actual response time must deviate by at least ANOMALY_MIN_DELTA from
     # the mean before we consider it operationally significant.
     delta   = abs(current_ms - mean)
     anomaly = 1 if abs(z) > ANOMALY_Z and delta > ANOMALY_MIN_DELTA else 0

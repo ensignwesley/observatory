@@ -370,6 +370,29 @@ class TestComputeAnomaly(unittest.TestCase):
         self.assertEqual(z, 0.0)
         self.assertEqual(anomaly, 0)
 
+    def test_std_floor_suppresses_tiny_baseline_noise(self):
+        # Baseline: very stable fast service, mean≈1ms, std≈0.2ms.
+        # Without ANOMALY_STD_FLOOR, 3ms would look like a huge z-score.
+        for i in range(20):
+            self._insert(0.8 if i % 2 == 0 else 1.2, offset_s=i*60)
+        z, anomaly = checker.compute_anomaly(self.conn, self.slug, self.now, 3.0)
+        self.assertLess(abs(z), checker.ANOMALY_Z)
+        self.assertEqual(anomaly, 0)
+
+    def test_min_delta_suppresses_statistical_but_tiny_spikes(self):
+        # Baseline std is small enough that this is statistically unusual, but
+        # the absolute change is below the operational-significance threshold.
+        for i in range(20):
+            self._insert(98.0 if i % 2 == 0 else 102.0, offset_s=i*60)
+        z, anomaly = checker.compute_anomaly(
+            self.conn,
+            self.slug,
+            self.now,
+            100.0 + checker.ANOMALY_MIN_DELTA - 1.0,
+        )
+        self.assertGreater(abs(z), checker.ANOMALY_Z)
+        self.assertEqual(anomaly, 0)
+
     def test_old_samples_outside_window_excluded(self):
         # Insert samples just outside the window — should not count
         for i in range(20):

@@ -41,14 +41,15 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 
 ## Anomaly Detection
 
-Rolling z-score against trailing 1-hour window:
+Rolling z-score against trailing 1-hour window, guarded against noise on very fast services:
 
 ```
-z = (current_ms - mean_1h) / std_1h
-anomaly = |z| > 2.0
+effective_std = max(std_1h, 5ms)
+z = (current_ms - mean_1h) / effective_std
+anomaly = |z| > 2.0 AND abs(current_ms - mean_1h) > 15ms
 ```
 
-Requires minimum 5 samples before flagging. Anomalies appear as red dots on the SVG graph and in the summary panel.
+Requires minimum 5 samples before flagging. The standard-deviation floor and absolute-delta guard keep sub-millisecond jitter from being reported as operationally meaningful. Anomalies appear as red dots on the SVG graph and in the summary panel.
 
 ## Push Alerting (optional)
 
