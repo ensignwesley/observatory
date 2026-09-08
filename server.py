@@ -15,6 +15,7 @@ import csv
 import io
 import json
 import math
+import os
 import signal
 import sqlite3
 import threading
@@ -23,8 +24,8 @@ from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-DB_PATH = Path.home() / 'observatory/observatory.db'
-PORT    = 3003
+DB_PATH = Path(os.environ.get('OBSERVATORY_DB', Path.home() / 'observatory/observatory.db'))
+PORT    = int(os.environ.get('OBSERVATORY_PORT', '3003'))
 
 TARGETS = ['blog', 'dead-drop', 'dead-chat', 'status', 'observatory', 'pathfinder', 'comments', 'forth', 'lisp', 'markov']
 TARGET_NAMES = {

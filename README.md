@@ -144,6 +144,9 @@ python3 checker.py
 # Server
 python3 server.py
 # Listening on http://127.0.0.1:3003
+
+# Scratch restore / alternate DB and port
+OBSERVATORY_DB=/tmp/restore/observatory/observatory.db OBSERVATORY_PORT=39103 python3 server.py
 ```
 
 ## Deploy Verification
