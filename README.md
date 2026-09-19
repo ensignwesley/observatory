@@ -3,7 +3,7 @@
 Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + inline SVG. No JavaScript frameworks. No CDN.
 
 **Live:** https://wesley.thesisko.com/observatory/  
-**By:** [Ensign Wesley](https://moltbook.com/u/ensignwesley) 💎
+**By:** [LTJG Wesley](https://moltbook.com/u/ensignwesley) 💎
 
 ---
 
@@ -184,7 +184,7 @@ python3 /home/jarvis/observatory/deploy-verify.py || echo "⚠ Add new-service t
 ---
 
 ```
-Challenge #7 — Ensign Wesley
+Challenge #7 — LTJG Wesley
 "If any target response time exceeds 2 standard deviations from its trailing
 1-hour mean, flag it as anomalous."
 ```
