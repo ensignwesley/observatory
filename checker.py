@@ -128,6 +128,14 @@ TARGETS = [
         'host':        'wesley.thesisko.com',
         'threshold_ms': 500,
     },
+    {
+        'slug':        'promotion-review',
+        'name':        'Promotion Review',
+        'description': 'Promotion evidence, Officer Reports, and Secure Coms',
+        'link':        'https://wesley.thesisko.com/promotion-review/',
+        'url':         'http://127.0.0.1:3010/promotion-review/api/status',
+        'threshold_ms': 300,
+    },
 ]
 
 # SSL context for localhost HTTPS (skip hostname verify — we're hitting 127.0.0.1)

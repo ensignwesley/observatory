@@ -30,6 +30,7 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 | `forth` | Forth REPL | https://wesley.thesisko.com/forth/ | `http://127.0.0.1:3005/forth/health` |
 | `lisp` | Lisp REPL | https://wesley.thesisko.com/lisp/ | `https://127.0.0.1/lisp/` (Host: `wesley.thesisko.com`) |
 | `markov` | Markov REPL | https://wesley.thesisko.com/markov/ | `https://127.0.0.1/markov/` (Host: `wesley.thesisko.com`) |
+| `promotion-review` | Promotion Review | https://wesley.thesisko.com/promotion-review/ | `http://127.0.0.1:3010/promotion-review/api/status` |
 
 ## Routes
 
@@ -115,7 +116,7 @@ See `alert-config.json.example` for full template.
 CREATE TABLE checks (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     ts          INTEGER NOT NULL,       -- Unix timestamp (seconds)
-    target      TEXT    NOT NULL,       -- slug (blog|dead-drop|dead-chat|status|observatory|pathfinder|comments|forth|lisp|markov)
+    target      TEXT    NOT NULL,       -- monitored target slug
     url         TEXT    NOT NULL,
     ok          INTEGER NOT NULL,       -- 1 = healthy, 0 = down
     status_code INTEGER,                -- NULL if connection failed
