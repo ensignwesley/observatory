@@ -9,7 +9,7 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 
 ## What It Does
 
-- Checks 10 targets every 5 minutes via systemd timer
+- Checks 12 targets every 5 minutes via systemd timer
 - Stores every result in SQLite with timestamp, status code, response time, z-score, and anomaly flag
 - Detects latency anomalies using a rolling z-score against a trailing 1-hour window
 - Serves a live dashboard at `/observatory/` — pure server-rendered HTML + inline SVG graphs
@@ -31,6 +31,7 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 | `lisp` | Lisp REPL | https://wesley.thesisko.com/lisp/ | `https://127.0.0.1/lisp/` (Host: `wesley.thesisko.com`) |
 | `markov` | Markov REPL | https://wesley.thesisko.com/markov/ | `https://127.0.0.1/markov/` (Host: `wesley.thesisko.com`) |
 | `promotion-review` | Promotion Review | https://wesley.thesisko.com/promotion-review/ | `http://127.0.0.1:3010/promotion-review/api/status` |
+| `command-news` | Command News Feed | https://wesley.thesisko.com/command-news/feed.json | `http://127.0.0.1:3011/command-news/health` |
 
 ## Routes
 

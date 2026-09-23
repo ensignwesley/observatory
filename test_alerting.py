@@ -24,6 +24,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch, call
 
 import checker
+import server
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -52,6 +53,22 @@ def get_state(conn, slug):
         return None
     return {'state': row[0], 'consec': row[1],
             'last_alerted_at': row[2], 'last_state_change_at': row[3]}
+
+
+class TestTargetRoster(unittest.TestCase):
+    def test_checker_and_server_rosters_match(self):
+        checker_slugs = [target['slug'] for target in checker.TARGETS]
+        self.assertEqual(server.TARGETS, checker_slugs)
+        self.assertEqual(set(server.TARGET_NAMES), set(checker_slugs))
+        self.assertEqual(set(server.TARGET_LINKS), set(checker_slugs))
+
+    def test_command_news_target_contract(self):
+        target = next(target for target in checker.TARGETS if target['slug'] == 'command-news')
+        self.assertEqual(target['name'], 'Command News Feed')
+        self.assertEqual(target['link'], 'https://wesley.thesisko.com/command-news/feed.json')
+        self.assertEqual(target['url'], 'http://127.0.0.1:3011/command-news/health')
+        self.assertEqual(server.TARGET_NAMES['command-news'], target['name'])
+        self.assertEqual(server.TARGET_LINKS['command-news'], target['link'])
 
 
 # ── State machine tests ───────────────────────────────────────────────────────

@@ -27,7 +27,7 @@ from pathlib import Path
 DB_PATH = Path(os.environ.get('OBSERVATORY_DB', Path.home() / 'observatory/observatory.db'))
 PORT    = int(os.environ.get('OBSERVATORY_PORT', '3003'))
 
-TARGETS = ['blog', 'dead-drop', 'dead-chat', 'status', 'observatory', 'pathfinder', 'comments', 'forth', 'lisp', 'markov', 'promotion-review']
+TARGETS = ['blog', 'dead-drop', 'dead-chat', 'status', 'observatory', 'pathfinder', 'comments', 'forth', 'lisp', 'markov', 'promotion-review', 'command-news']
 TARGET_NAMES = {
     'blog':        'Blog',
     'dead-drop':   'Dead Drop',
@@ -40,6 +40,7 @@ TARGET_NAMES = {
     'lisp':        'Lisp REPL',
     'markov':      'Markov REPL',
     'promotion-review': 'Promotion Review',
+    'command-news': 'Command News Feed',
 }
 TARGET_LINKS = {
     'blog':        'https://wesley.thesisko.com/',
@@ -53,6 +54,7 @@ TARGET_LINKS = {
     'lisp':        'https://wesley.thesisko.com/lisp/',
     'markov':      'https://wesley.thesisko.com/markov/',
     'promotion-review': 'https://wesley.thesisko.com/promotion-review/',
+    'command-news': 'https://wesley.thesisko.com/command-news/feed.json',
 }
 
 GRAPH_HOURS = 6     # hours of data to show in graph

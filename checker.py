@@ -136,6 +136,14 @@ TARGETS = [
         'url':         'http://127.0.0.1:3010/promotion-review/api/status',
         'threshold_ms': 300,
     },
+    {
+        'slug':        'command-news',
+        'name':        'Command News Feed',
+        'description': '18-source JSON feed for Command digest generation',
+        'link':        'https://wesley.thesisko.com/command-news/feed.json',
+        'url':         'http://127.0.0.1:3011/command-news/health',
+        'threshold_ms': 300,
+    },
 ]
 
 # SSL context for localhost HTTPS (skip hostname verify — we're hitting 127.0.0.1)
