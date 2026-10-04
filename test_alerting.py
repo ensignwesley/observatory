@@ -62,13 +62,9 @@ class TestTargetRoster(unittest.TestCase):
         self.assertEqual(set(server.TARGET_NAMES), set(checker_slugs))
         self.assertEqual(set(server.TARGET_LINKS), set(checker_slugs))
 
-    def test_command_news_target_contract(self):
-        target = next(target for target in checker.TARGETS if target['slug'] == 'command-news')
-        self.assertEqual(target['name'], 'Command News Feed')
-        self.assertEqual(target['link'], 'https://wesley.thesisko.com/command-news/feed.json')
-        self.assertEqual(target['url'], 'http://127.0.0.1:3011/command-news/health')
-        self.assertEqual(server.TARGET_NAMES['command-news'], target['name'])
-        self.assertEqual(server.TARGET_LINKS['command-news'], target['link'])
+    def test_retired_command_news_is_not_monitored(self):
+        self.assertNotIn('command-news', [target['slug'] for target in checker.TARGETS])
+        self.assertNotIn('command-news', server.TARGETS)
 
 
 # ── State machine tests ───────────────────────────────────────────────────────

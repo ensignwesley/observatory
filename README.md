@@ -31,7 +31,6 @@ Uptime dashboard with rolling z-score anomaly detection. Server-rendered HTML + 
 | `lisp` | Lisp REPL | https://wesley.thesisko.com/lisp/ | `https://127.0.0.1/lisp/` (Host: `wesley.thesisko.com`) |
 | `markov` | Markov REPL | https://wesley.thesisko.com/markov/ | `https://127.0.0.1/markov/` (Host: `wesley.thesisko.com`) |
 | `promotion-review` | Promotion Review | https://wesley.thesisko.com/promotion-review/ | `http://127.0.0.1:3010/promotion-review/api/status` |
-| `command-news` | Command News Feed | https://wesley.thesisko.com/command-news/feed.json | `http://127.0.0.1:3011/command-news/health` |
 
 ## Routes
 
